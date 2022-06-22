@@ -22,8 +22,19 @@ namespace StarterAssets
         private Vector3 leftFoot;
         private Vector3 rightFoot;
 
+        private Vector3 l_Hit;
+        private Vector3 l_Noraml;
+
+        private Vector3 R_Hit;
+        private Vector3 R_Normal;
+
+        private Vector3 l_hit2;
+        private Vector3 l_normal2;
+
         public float fallMin = 0.7f;
         public float fallMax = 0.9f;
+
+        public Transform leftKneeDummy;
 
         private void Awake()
         {
@@ -37,7 +48,7 @@ namespace StarterAssets
 
             if (_input.move != Vector2.zero)
             {
-                ik_Weight = Mathf.Lerp(ik_Weight, 0, Time.deltaTime * lerpSpeed);
+                ik_Weight = Mathf.Lerp(ik_Weight, 0.2f, Time.deltaTime * lerpSpeed);
             }
             else
             {
@@ -63,9 +74,13 @@ namespace StarterAssets
             leftFoot = anim.GetBoneTransform(HumanBodyBones.LeftFoot).position;
             rightFoot = anim.GetBoneTransform(HumanBodyBones.RightFoot).position;
 
-            Vector3 l_Hit = GetHitPoint(leftFoot+Vector3.up, leftFoot + Vector3.down * rayDistance);
-            Vector3 R_Hit = GetHitPoint(rightFoot+Vector3.up, rightFoot + Vector3.down * rayDistance);
 
+
+            GetHitInfo(leftFoot, ref l_Hit,ref l_Noraml);
+
+            GetHitInfo(rightFoot, ref R_Hit, ref R_Normal);
+
+            //Debug.DrawRay(leftFoot+ Vector3.up, transform.forward);
             //float l_HItDis = GetHitDistance(leftFoot, leftFoot + Vector3.down * rayDistance) * -1f;
             //float R_HitDis = GetHitDistance(rightFoot, rightFoot + Vector3.down * rayDistance) * -1f;
 
@@ -78,29 +93,52 @@ namespace StarterAssets
             rightFoot = R_Hit + footIk_offset;
 
 
-            //Debug.Log("left : " + leftFoot);s
+            //Debug.Log("left : " + leftFoot);
             //Debug.Log("right : " + rightFoot);
 
             //Debug.Log(-Mathf.Abs(leftFoot.y - rightFoot.y) / 2 * ik_Weight);
             anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, ik_Weight);
-            anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1f);
+            anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, ik_Weight);
 
             anim.SetIKPosition(AvatarIKGoal.LeftFoot, leftFoot);
+            anim.SetIKRotation(AvatarIKGoal.LeftFoot, Quaternion.LookRotation(transform.forward, l_Noraml));
 
 
-            anim.SetIKRotationWeight(AvatarIKGoal.RightFoot,1f);
-            anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, ik_Weight);    
+            //발부터 무릎까지 높이
+
+            float test = anim.GetIKHintPosition(AvatarIKHint.LeftKnee).y - anim.GetIKPosition(AvatarIKGoal.LeftFoot).y;
+
+            anim.SetIKRotationWeight(AvatarIKGoal.RightFoot, ik_Weight);
+            anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, ik_Weight);   
+
+
             anim.SetIKPosition(AvatarIKGoal.RightFoot, rightFoot);
-
+            anim.SetIKRotation(AvatarIKGoal.RightFoot, Quaternion.LookRotation(transform.forward, R_Normal));
         }
-        Vector3 GetHitPoint(Vector3 start, Vector3 end)
+        void GetHitInfo(Vector3 start, Vector3 end ,ref Vector3 point, ref Vector3 normal)
         {
             if (Physics.Linecast(start, end, out RaycastHit hit))
             {
-                return hit.point;
+                point = hit.point;
+                normal = hit.normal;
             }
-            return end;
         }
+
+        void GetHitInfo(Vector3 origin, ref Vector3 point, ref Vector3 normal)
+        {
+            //Bottom Check
+            if (Physics.Linecast(origin + Vector3.up, origin+Vector3.down * rayDistance, out RaycastHit hit))
+            {
+                point = hit.point;
+                normal = hit.normal;
+
+            }
+
+            //Forward Check
+            Debug.DrawRay(leftKneeDummy.position, transform.forward);
+        }
+
+
 
         float GetHitDistance(Vector3 start, Vector3 end)
         {

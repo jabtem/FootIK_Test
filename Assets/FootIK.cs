@@ -48,7 +48,7 @@ namespace StarterAssets
 
             if (_input.move != Vector2.zero)
             {
-                ik_Weight = Mathf.Lerp(ik_Weight, 0.2f, Time.deltaTime * lerpSpeed);
+                ik_Weight = Mathf.Lerp(ik_Weight, 0.3f, Time.deltaTime * lerpSpeed);
             }
             else
             {
@@ -76,9 +76,9 @@ namespace StarterAssets
 
 
 
-            GetHitInfo(leftFoot, ref l_Hit,ref l_Noraml);
+            GetHitInfo(leftFoot, ref l_Hit,ref l_Noraml,anim.GetBoneTransform(HumanBodyBones.LeftLowerLeg).position);
 
-            GetHitInfo(rightFoot, ref R_Hit, ref R_Normal);
+            GetHitInfo(rightFoot, ref R_Hit, ref R_Normal, anim.GetBoneTransform(HumanBodyBones.RightLowerLeg).position);
 
             //Debug.DrawRay(leftFoot+ Vector3.up, transform.forward);
             //float l_HItDis = GetHitDistance(leftFoot, leftFoot + Vector3.down * rayDistance) * -1f;
@@ -124,18 +124,18 @@ namespace StarterAssets
             }
         }
 
-        void GetHitInfo(Vector3 origin, ref Vector3 point, ref Vector3 normal)
+        void GetHitInfo(Vector3 origin, ref Vector3 point, ref Vector3 normal, Vector3 limit)
         {
             //Bottom Check
             if (Physics.Linecast(origin + Vector3.up, origin+Vector3.down * rayDistance, out RaycastHit hit))
             {
-                point = hit.point;
+                if(hit.point.y < limit.y-0.1f)
+                {
+                    point = hit.point;
+                }
                 normal = hit.normal;
 
             }
-
-            //Forward Check
-            Debug.DrawRay(leftKneeDummy.position, transform.forward);
         }
 
 
